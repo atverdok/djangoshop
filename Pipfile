@@ -10,6 +10,7 @@ pillow = "*"
 celery = "*"
 braintree = "*"
 django = "*"
+weasyprint = "*"
 
 [requires]
 python_version = "3.6"
