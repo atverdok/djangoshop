@@ -11,6 +11,11 @@ celery = "*"
 braintree = "*"
 django = "*"
 weasyprint = "*"
+django-rosetta = "*"
+django-parler = "*"
+django-localflavor = "*"
+redis = "*"
+django-debug-toolbar = "*"
 
 [requires]
 python_version = "3.6"

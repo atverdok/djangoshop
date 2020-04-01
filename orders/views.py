@@ -7,7 +7,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect, get_object_or_404
 from cart.cart import Cart
 from .models import OrderItem, Order
-from .forms import OrderCreatedForm
+from .forms import OrderCreateForm
 from .tasks import order_created
 
 
@@ -35,15 +35,19 @@ def admin_order_detail(request, order_id):
 def order_create(request):
     cart = Cart(request)
     if request.method == 'POST':
-        form = OrderCreatedForm(request.POST)
+        form = OrderCreateForm(request.POST)
         if form.is_valid():
-            order = form.save()
+            order = form.save(commit=False)
+            if cart.coupon:
+                order.coupon = cart.coupon
+                order.discount = cart.coupon.discount
+            order.save()
             for item in cart:
                 OrderItem.objects.create(order=order,
                                          product=item['product'],
                                          price=item['price'],
                                          quantity=item['quantity'])
-            # clear cart
+            # clear the cart
             cart.clear()
             # launch asynchronous task
             order_created.delay(order.id)
@@ -51,11 +55,8 @@ def order_create(request):
             request.session['order_id'] = order.id
             # redirect for payment
             return redirect(reverse('payment:process'))
-            # return render(request,
-            #               'orders/order/created.html',
-            #               locals())
     else:
-        form = OrderCreatedForm()
-        return render(request,
-                      'orders/order/create.html',
-                      {'cart': cart, 'form': form})
+        form = OrderCreateForm()
+    return render(request,
+                  'orders/order/create.html',
+                  {'cart': cart, 'form': form})
